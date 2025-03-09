@@ -1,0 +1,5 @@
+package com.LibraryManagementSystem.LibraryManagementSystem.Repository;
+
+public interface UserRepository {
+
+}

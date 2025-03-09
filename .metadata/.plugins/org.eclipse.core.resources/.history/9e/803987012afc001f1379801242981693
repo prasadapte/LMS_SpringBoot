@@ -1,0 +1,5 @@
+package com.LibraryManagementSystem.LibraryManagementSystem.Exception;
+
+public class ResourceNotFoundException {
+
+}

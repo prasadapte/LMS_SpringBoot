@@ -1,0 +1,18 @@
+package com.LibraryManagementSystem.LibraryManagementSystem.Service;
+
+import org.springframework.stereotype.Service;
+
+import com.LibraryManagementSystem.LibraryManagementSystem.Repository.AdminRepository;
+
+@Service
+public class AdminService {
+
+	private AdminRepository adminRepository;
+	
+	public AdminService(AdminRepository adminRepository) {
+		this.adminRepository = adminRepository;
+	}
+	
+	
+	
+}

@@ -1,0 +1,5 @@
+package com.LibraryManagementSystem.LibraryManagementSystem.Entity;
+
+public class User {
+
+}

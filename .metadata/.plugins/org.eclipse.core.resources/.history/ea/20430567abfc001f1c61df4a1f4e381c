@@ -1,0 +1,126 @@
+package com.LibraryManagementSystem.LibraryManagementSystem.Service;
+
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import com.LibraryManagementSystem.LibraryManagementSystem.Entity.Book;
+import com.LibraryManagementSystem.LibraryManagementSystem.Entity.User;
+import com.LibraryManagementSystem.LibraryManagementSystem.Exception.InvalidRequestException;
+import com.LibraryManagementSystem.LibraryManagementSystem.Exception.ResourceNotFoundException;
+import com.LibraryManagementSystem.LibraryManagementSystem.Repository.BookRepository;
+import com.LibraryManagementSystem.LibraryManagementSystem.Repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class LibraryService extends RuntimeException {
+
+	private static final long serialVersionUID = 1L;
+
+	@Autowired
+	private UserRepository userRepository;
+	private BookRepository bookRepository;
+
+	public LibraryService(UserRepository userRepository, BookRepository bookRepository){
+		this.userRepository = userRepository;
+		this.bookRepository = bookRepository;		
+	}
+	
+	public ResponseEntity<Map<String,Object>> createUser(User user){
+		
+//		System.out.println(userRepository.save(user).getAddress());
+		return userRepository.save(user);
+		
+		
+//		User saveUser =  userRepository.save(user);
+//		
+//		System.out.println(saveUser.getName());
+//		if(saveUser != null) {
+//			Map<String,Object> m = new HashMap<>();
+//			m.put("message","User Saved Successfully");
+//			m.put("User Data",saveUser);
+//			return ResponseEntity.ok(m);
+//		}
+//		else
+//			throw new InvalidRequestException("Unable To Create User :(");
+	}
+	
+	
+	public ResponseEntity<Map<String,Object>> createBook(Book book){
+		Book saveBook =  bookRepository.save(book);
+		if(saveBook != null) {
+			Map<String,Object> m = new HashMap<>();
+			m.put("message","Book Save Successfully");
+			m.put("Book Data",saveBook);
+			return ResponseEntity.ok(m);
+		}
+		else
+			throw new InvalidRequestException("Unable To Create Book :(");
+	}
+	
+	
+	public List<Book> getAllBooks() {
+		return bookRepository.findAll();
+	}
+
+	public List<User> getAllUsers() {
+		return userRepository.findAll();
+	}
+
+	public User getUserById(Long userId) {
+		return userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+	}
+
+	public Book getBookById(Long bookId) {
+		return bookRepository.findById(bookId).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
+	}
+
+	public String issueBook(Long userId, Long bookId) {
+		User user = getUserById(userId);
+		Book book = getBookById(bookId);
+
+		if (!book.getStatus().equals("Available")) 
+			throw new InvalidRequestException("Book is already issued");			
+
+		LocalDate today = LocalDate.now();
+		long booksIssuedThisMonth = user.getBooks().stream().filter(b -> b.getBorrowedDate().getMonth().equals(today.getMonth())).count();
+		long bookIssuedToday = user.getBooks().stream().filter(b -> b.getBorrowedDate().equals(today.getMonth())).count();
+
+		if (booksIssuedThisMonth >= 4) 
+			throw new InvalidRequestException("User has reached the monthly limit of 4 books");
+
+		if (bookIssuedToday >= 1) 
+			throw new InvalidRequestException("User has reached the Daily limit of 1 book");
+
+		book.setUser(user);
+		book.setStatus("Issued");
+		book.setBorrowedDate(today);
+		book.setReturnDate(today.plusMonths(1));
+
+		bookRepository.save(book);
+		return "Book issued successfully. Return date: " + book.getReturnDate();
+	}
+
+	public String returnBook(Long bookId) {
+		Book book = getBookById(bookId);
+
+		if (book.getStatus().equals("Available")) {
+			throw new InvalidRequestException("Book is not issued");
+		}
+
+		book.setStatus("Available");
+		book.setBorrowedDate(null);
+		book.setReturnDate(null);
+		book.setUser(null);
+
+		bookRepository.save(book);
+		return "Book returned successfully";
+	}
+}

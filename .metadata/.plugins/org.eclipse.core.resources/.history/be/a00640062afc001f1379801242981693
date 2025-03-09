@@ -1,0 +1,7 @@
+package com.LibraryManagementSystem.LibraryManagementSystem.Exception;
+
+public class ResourceNotFoundException {
+    public ResourceNotFoundException(String message) {
+        super(message);
+    }
+}
